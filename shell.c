@@ -2,19 +2,18 @@
 
 /**
  * execute_command - executes a command line
- * @line: command string
- * @shell_name: name of the shell program (argv[0])
+ * @line: Command string
+ * @shell_name: Name of the shell program
  *
- * Return: 0 on success, -1 to exit
+ * Return: 0 to continue, -1 to exit shell
  */
 int execute_command(char *line, char *shell_name)
 {
-    char *args[100];  /* simple argument array */
+    char *args[100];
     char *token;
     pid_t pid;
     int i = 0, status;
 
-    /* Tokenize input string by spaces */
     token = strtok(line, " ");
     while (token != NULL && i < 99)
     {
@@ -23,11 +22,9 @@ int execute_command(char *line, char *shell_name)
     }
     args[i] = NULL;
 
-    /* Built-in command: exit */
     if (strcmp(args[0], "exit") == 0)
         return (-1);
 
-    /* Fork child process */
     pid = fork();
     if (pid == -1)
     {
@@ -35,7 +32,7 @@ int execute_command(char *line, char *shell_name)
         return (0);
     }
 
-    if (pid == 0)  /* Child process */
+    if (pid == 0)
     {
         if (execve(args[0], args, NULL) == -1)
         {
@@ -43,7 +40,7 @@ int execute_command(char *line, char *shell_name)
             _exit(127);
         }
     }
-    else  /* Parent process */
+    else
         waitpid(pid, &status, 0);
 
     return (0);

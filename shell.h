@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+/* Function prototype for executing commands */
 int execute_command(char *line, char *shell_name);
 
-#endif
+#endif /* SHELL_H */
