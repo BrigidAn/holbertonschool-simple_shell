@@ -1,47 +1,46 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <string.h>
 #include "shell.h"
 
-/**
- * execute_command - executes a command line
- * @line: Command string
- * @shell_name: Name of the shell program
- *
- * Return: 0 to continue, -1 to exit shell
- */
-int execute_command(char *line, char *shell_name)
+extern char **environ;
+
+void execute_command(char *command, char *prog_name)
 {
-    char *args[100];
-    char *token;
     pid_t pid;
-    int i = 0, status;
+    int status;
+    char *args[2];
 
-    token = strtok(line, " ");
-    while (token != NULL && i < 99)
-    {
-        args[i++] = token;
-        token = strtok(NULL, " ");
-    }
-    args[i] = NULL;
+    /* Trim leading spaces */
+    while (*command == ' ' || *command == '\t')
+        command++;
 
-    if (strcmp(args[0], "exit") == 0)
-        return (-1);
+    /* Ignore empty lines */
+    if (*command == '\0')
+        return;
 
     pid = fork();
     if (pid == -1)
     {
-        perror("fork");
-        return (0);
+        perror("fork failed");
+        return;
     }
 
-    if (pid == 0)
+    if (pid == 0) /* Child process */
     {
-        if (execve(args[0], args, NULL) == -1)
+        args[0] = command;
+        args[1] = NULL;
+
+        if (execve(command, args, environ) == -1)
         {
-            fprintf(stderr, "%s: 1: %s: not found\n", shell_name, args[0]);
+            fprintf(stderr, "%s: 1: %s: not found\n", prog_name, command);
             _exit(127);
         }
     }
-    else
+    else /* Parent process */
+    {
         waitpid(pid, &status, 0);
-
-    return (0);
+    }
 }

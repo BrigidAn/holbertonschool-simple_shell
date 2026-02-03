@@ -1,42 +1,48 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stddef.h>
+#include <string.h>
 #include "shell.h"
 
-/**
- * main - Entry point of the shell program
- * @argc: Argument count (unused)
- * @argv: Argument vector (used for program name)
- *
- * Return: 0 on success
- */
+extern char **environ;
+
 int main(int argc, char **argv)
 {
-    char *line = NULL;
-    size_t len = 0;
+    char *line;
+    size_t len;
     ssize_t nread;
+    int interactive;
 
     (void)argc;
 
+    line = NULL;
+    len = 0;
+    interactive = isatty(STDIN_FILENO);
+
     while (1)
     {
-        if (isatty(STDIN_FILENO))
-            write(STDOUT_FILENO, "($) ", 4);
+        if (interactive)
+        {
+            printf("($) ");
+            fflush(stdout);
+        }
 
         nread = getline(&line, &len, stdin);
-        if (nread == -1)
+        if (nread == -1) /* Ctrl+D or EOF */
         {
-            write(STDOUT_FILENO, "\n", 1);
-            break;
+            free(line);
+            if (interactive)
+                printf("\n");
+            exit(0);
         }
 
         if (line[nread - 1] == '\n')
             line[nread - 1] = '\0';
 
-        if (line[0] == '\0')
-            continue;
-
-        if (execute_command(line, argv[0]) == -1)
-            break;
+        execute_command(line, argv[0]);
     }
 
     free(line);
-    return (0);
+    return 0;
 }
